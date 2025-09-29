@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>私人网上银行</title>
+    <!-- 引入 Tailwind CSS 以实现现代化设计 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 使用 Google Fonts 以获得更优雅的字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 自定义样式 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* 深色背景 */
+        }
+        .font-serif-sc {
+            font-family: 'Noto Serif SC', serif;
+        }
+        /* 自定义滚动条样式，提升细节质感 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 6px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        /* 页面切换时的淡入动画效果 */
+        .page { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* 自定义卡片辉光效果 */
+        .card-glow {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .card-glow::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(110deg, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0) 60%);
+            transform: skewX(-25deg);
+            transition: left 0.8s;
+        }
+        .card-glow:hover::before {
+            left: 150%;
+        }
+        .modal-content {
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0px); }
+        }
+        /* 禁用按钮的样式 */
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        /* 日期选择器图标颜色 */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.8);
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-300">
+
+    <div id="app" class="flex h-screen bg-gray-900 text-gray-300">
+
+        <!-- 侧边导航栏 -->
+        <aside class="w-64 bg-gray-800 shadow-lg flex flex-col" id="sidebar">
+            <div class="p-6 text-2xl font-bold text-amber-400 border-b border-gray-700 font-serif-sc">
+                家族办公室
+            </div>
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <a href="#dashboard" class="nav-link flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors">
+                    <svg class="w-5 h-5 mr-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    <span>账户总览</span>
+                </a>
+                <a href="#accounts" class="nav-link flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors">
+                     <svg class="w-5 h-5 mr-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path></svg>
+                    <span>存款账户</span>
+                </a>
+                <a href="#family" class="nav-link flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors">
+                    <svg class="w-5 h-5 mr-3 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m-7.5-2.962a3.75 3.75 0 100-5.925 3.75 3.75 0 000 5.925zM12 21a9.094 9.094 0 01-3.741-.479 3 3 0 01-4.682-2.72M12 3a9.094 9.094 0 013.741.479 3 3 0 014.682 2.72m-7.5 2.962a3.75 3.75 0 100 5.925 3.75 3.75 0 000-5.925z" /></svg>
+                    <span>家人账户</span>
+                </a>
+                 <a href="#cards" class="nav-link flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors">
+                     <svg class="w-5 h-5 mr-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H4a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                    <span>我的卡片</span>
+                </a>
+                <a href="#transfer" class="nav-link flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors">
+                    <svg class="w-5 h-5 mr-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                    <span>转账汇款</span>
+                </a>
+                 <a href="#forex" class="nav-link flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors">
+                    <svg class="w-5 h-5 mr-3 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>外汇兑换</span>
+                </a>
+                <a href="#transactions" class="nav-link flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors">
+                     <svg class="w-5 h-5 mr-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span>交易明细</span>
+                </a>
+                <a href="#investment" class="nav-link flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors">
+                     <svg class="w-5 h-5 mr-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                    <span>投资理财</span>
+                </a>
+                 <a href="#credit" class="nav-link flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors">
+                    <svg class="w-5 h-5 mr-3 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.75A.75.75 0 013 4.5h.75m0 0a.75.75 0 01.75.75v.75m0 0h.75a.75.75 0 01.75-.75V5.25a.75.75 0 01-.75-.75h-.75m0 0a.75.75 0 01-.75.75v.75m0 0A.75.75 0 013 6v-.75m0 0a.75.75 0 01.75-.75h.75M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <span>信贷服务</span>
+                </a>
+                <a href="#concierge" class="nav-link flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors">
+                    <svg class="w-5 h-5 mr-3 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" /></svg>
+                    <span>礼宾服务</span>
+                </a>
+            </nav>
+            <div class="p-4 mt-auto border-t border-gray-700">
+                <a href="#settings" class="nav-link flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors">
+                     <svg class="w-5 h-5 mr-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924-1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <span>设置</span>
+                </a>
+                <button id="logoutButton" class="w-full flex items-center mt-2 px-4 py-3 text-red-400 rounded-lg hover:bg-red-900/50 transition-colors">
+                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <span>安全退出</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="flex-1 p-6 sm:p-8 lg:p-10 overflow-y-auto bg-gray-900">
+            <header class="flex justify-between items-center pb-6 border-b border-gray-700">
+                <div>
+                    <h1 class="text-3xl font-bold text-white font-serif-sc" id="pageTitle">账户总览</h1>
+                    <p class="text-gray-400 mt-1" id="welcomeMessage"></p>
+                </div>
+                 <div class="flex items-center space-x-4">
+                    <button class="p-2 rounded-full hover:bg-gray-700">
+                       <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    </button>
+                    <div class="flex items-center">
+                        <img src="https://placehold.co/40x40/111827/D1AC00?text=M" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-amber-400">
+                        <div class="ml-3">
+                            <p class="font-semibold text-white" id="userName"></p>
+                            <p class="text-sm text-gray-500">上次登录: <span id="lastLoginTime"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div id="content" class="mt-8"></div>
+        </main>
+    </div>
+
+    <!-- 提示消息框 -->
+    <div id="toast" class="fixed top-5 right-5 bg-green-500 text-white py-3 px-6 rounded-lg shadow-lg transform translate-x-[150%] transition-transform duration-500 ease-in-out z-50">
+        <p id="toast-message">操作成功！</p>
+    </div>
+
+    <!-- 通用详情/管理 Modal -->
+    <div id="detail-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center hidden z-40">
+        <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl transform modal-content" id="detail-modal-content-wrapper">
+             <div class="p-6 sm:p-8" id="detail-modal-content">
+                <!-- Modal content will be injected here by JavaScript -->
+             </div>
+        </div>
+    </div>
+    
+    <!-- 模板 -->
+    <template id="dashboard-template">
+        <div class="page grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-8">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-white">总资产 (估值)</h2>
+                    <p class="text-4xl font-bold text-amber-400" id="total-assets">¥ 0.00</p>
+                    <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4" id="dashboard-summary-grid"></div>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-white">最近交易记录</h2>
+                        <a href="#transactions" class="text-amber-400 hover:underline text-sm font-medium">查看全部</a>
+                    </div>
+                    <div class="space-y-2" id="recent-transactions-list"></div>
+                </div>
+            </div>
+            <div class="space-y-8">
+                 <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-white">资产配置</h2>
+                    <div id="asset-chart-container" class="flex justify-center items-center h-48"></div>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-white">快捷操作</h2>
+                    <div class="space-y-3">
+                        <button onclick="app.navigateTo('transfer')" class="w-full text-left flex items-center p-3 bg-gray-700/50 text-amber-400 rounded-lg hover:bg-gray-700 transition-colors">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                            <span>我要转账</span>
+                        </button>
+                         <button onclick="app.navigateTo('investment')" class="w-full text-left flex items-center p-3 bg-gray-700/50 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                            <span>投资理财</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+    
+    <template id="accounts-template">
+        <div class="page space-y-8">
+             <div id="accounts-list" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+        </div>
+    </template>
+     <template id="family-template">
+        <div class="page space-y-8" id="family-accounts-list"></div>
+    </template>
+    <template id="cards-template">
+        <div class="page space-y-8">
+             <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-8" id="cards-list"></div>
+        </div>
+    </template>
+    <template id="forex-template">
+        <div class="page grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 bg-gray-800 p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-white mb-6">实时外汇兑换</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400">卖出货币</label>
+                        <div class="flex mt-1">
+                            <select id="forex-from-currency" class="w-1/3 bg-gray-700 border-gray-600 rounded-l-md p-3 text-white"></select>
+                            <input type="number" id="forex-from-amount" placeholder="0.00" class="w-2/3 bg-gray-900 border-gray-600 p-3 text-white text-right">
+                        </div>
+                         <p class="text-xs text-gray-500 mt-1" id="forex-from-balance"></p>
+                    </div>
+                    <div class="text-center py-2">
+                        <svg class="w-6 h-6 text-gray-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" /></svg>
+                    </div>
+                     <div>
+                        <label class="block text-sm font-medium text-gray-400">买入货币</label>
+                        <div class="flex mt-1">
+                            <select id="forex-to-currency" class="w-1/3 bg-gray-700 border-gray-600 rounded-l-md p-3 text-white"></select>
+                            <input type="text" id="forex-to-amount" placeholder="0.00" class="w-2/3 bg-gray-900 border-gray-600 p-3 text-white text-right" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8">
+                     <button id="forex-exchange-btn" class="w-full py-3 px-6 font-semibold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">立即兑换</button>
+                </div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                <h3 class="text-xl font-semibold text-white mb-4">参考汇率</h3>
+                <div id="forex-rates-list" class="space-y-3"></div>
+            </div>
+        </div>
+    </template>
+    <template id="credit-template">
+        <div class="page space-y-8">
+            <div class="bg-gray-800 p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-white mb-6">信贷服务</h2>
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    <div>
+                        <p class="text-gray-400">授信总额度</p>
+                        <p class="text-3xl font-bold text-amber-400" id="credit-total-limit">¥ 0.00</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400">已用额度</p>
+                        <p class="text-3xl font-bold text-white" id="credit-used-amount">¥ 0.00</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400">可用额度</p>
+                        <p class="text-3xl font-bold text-green-400" id="credit-available-amount">¥ 0.00</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-white">当前贷款</h3>
+                    <button onclick="app.openNewLoanModal()" class="text-sm py-2 px-4 font-semibold bg-gray-600 text-white rounded-lg hover:bg-gray-500">申请新贷款</button>
+                </div>
+                <div id="loans-list" class="space-y-4"></div>
+            </div>
+        </div>
+    </template>
+    <template id="concierge-template">
+        <div class="page grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 bg-gray-800 p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-white mb-6">服务请求记录</h2>
+                <div id="concierge-requests-list" class="space-y-4"></div>
+            </div>
+            <div class="bg-gray-800 p-8 rounded-xl shadow-lg">
+                 <h3 class="text-xl font-semibold text-white mb-6">提交新请求</h3>
+                 <div class="space-y-4">
+                     <div>
+                        <label class="block text-sm font-medium text-gray-400">服务类型</label>
+                        <select id="concierge-service-type" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white">
+                            <option>旅行安排</option>
+                            <option>高端预定</option>
+                            <option>活动策划</option>
+                            <option>其他</option>
+                        </select>
+                     </div>
+                     <div>
+                        <label class="block text-sm font-medium text-gray-400">详细描述</label>
+                        <textarea id="concierge-details" rows="5" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white" placeholder="请在此处描述您的需求..."></textarea>
+                     </div>
+                     <div class="pt-2">
+                        <button id="concierge-submit-btn" class="w-full py-3 font-semibold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">提交请求</button>
+                     </div>
+                 </div>
+            </div>
+        </div>
+    </template>
+    <template id="transfer-template">
+        <div class="page max-w-2xl mx-auto text-center">
+            <div class="bg-gray-800 p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-4 text-white">转账汇款</h2>
+                <p class="text-gray-400 mb-6">为了保障您的资金安全，转账流程将通过安全向导完成。</p>
+                <button onclick="app.openTransferModal()" class="py-3 px-6 font-semibold text-gray-900 bg-amber-400 rounded-lg hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-amber-400">
+                    开始转账
+                </button>
+            </div>
+        </div>
+    </template>
+    <template id="transactions-template">
+        <div class="page">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 flex-wrap">
+                     <h2 class="text-xl font-semibold text-white w-full sm:w-auto">交易记录</h2>
+                    <div class="flex items-center space-x-2 sm:space-x-4 flex-wrap w-full sm:w-auto justify-end gap-2">
+                        <select id="filter-account" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-amber-500 focus:border-amber-500 block p-2.5"></select>
+                        <input type="date" id="start-date" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-amber-500 focus:border-amber-500 block p-2.5">
+                        <input type="date" id="end-date" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-amber-500 focus:border-amber-500 block p-2.5">
+                        <button id="filter-btn" class="py-2 px-4 font-semibold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">筛选</button>
+                        <button id="download-statement-btn" class="py-2 px-4 font-semibold bg-gray-600 text-white rounded-lg hover:bg-gray-500">下载对账单</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead class="bg-gray-900/50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">日期/时间</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">描述/账户</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">金额</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-gray-800 divide-y divide-gray-700" id="transactions-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </template>
+    <template id="investment-template">
+        <div class="page grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-8">
+                 <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold text-white mb-2">投资组合概览</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center py-4">
+                        <div>
+                            <p class="text-gray-400 text-sm">总投资市值</p>
+                            <p class="text-2xl font-bold text-amber-400" id="investment-total-value">¥ 0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">累计收益</p>
+                            <p class="text-2xl font-bold" id="investment-total-pnl">¥ 0.00</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">累计收益率</p>
+                            <p class="text-2xl font-bold" id="investment-total-return">0.00%</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-800 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold text-white p-6">持仓详情</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead class="bg-gray-900/50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">投资组合/地区</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">当前市值</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">成本</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">浮动盈亏</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-700" id="holdings-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-8">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-white">资产配置</h2>
+                    <div id="investment-chart-container" class="flex justify-center items-center h-48"></div>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-white">投资申购</h2>
+                     <div class="space-y-3">
+                        <button onclick="app.openPurchaseModal('investment')" class="w-full py-3 px-4 font-semibold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">购买投资产品</button>
+                    </div>
+                </div>
+                 <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-4 text-white">市场前沿</h2>
+                     <p class="text-sm text-gray-400">宏观经济分析、市场动态等功能正在开发中。</p>
+                </div>
+            </div>
+        </div>
+    </template>
+    <template id="settings-template">
+        <div class="page max-w-4xl mx-auto space-y-8">
+            <div class="bg-gray-800 p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-6 text-white">修改交易密码</h2>
+                <div id="change-password-form" class="space-y-4">
+                    <div>
+                        <label for="old-password" class="block text-sm font-medium text-gray-400">旧密码</label>
+                        <input type="password" id="old-password" placeholder="请输入当前的交易密码" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white">
+                    </div>
+                    <div>
+                        <label for="new-password" class="block text-sm font-medium text-gray-400">新密码</label>
+                        <input type="password" id="new-password" placeholder="请输入6位数字新密码" maxlength="6" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white">
+                    </div>
+                    <div>
+                        <label for="confirm-password" class="block text-sm font-medium text-gray-400">确认新密码</label>
+                        <input type="password" id="confirm-password" placeholder="请再次输入新密码" maxlength="6" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white">
+                    </div>
+                    <div class="pt-4">
+                         <button id="save-password-btn" class="py-2 px-6 font-semibold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">确认修改</button>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-800 p-8 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-6 text-white">安全设置</h2>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-white">登录安全提醒</h3>
+                            <p class="text-sm text-gray-400">在新设备登录时，将向您发送通知。</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" value="" class="sr-only peer" checked>
+                          <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-4 peer-focus:ring-amber-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                        </label>
+                    </div>
+                     <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-white">生物识别登录</h3>
+                            <p class="text-sm text-gray-400">允许使用指纹或面容ID登录。</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" value="" class="sr-only peer">
+                          <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-4 peer-focus:ring-amber-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+    
+    <script>
+    // 模拟数据
+    let mockData = {};
+
+    const initialData = {
+        user: { 
+            name: 'MOAILUN', 
+            lastLogin: new Date(Date.now() - 3600 * 1000 * 3).toISOString(),
+            securityPassword: '123123' // 初始交易密码
+        },
+        accounts: [
+            { id: 'CNY32414', name: '人民币活期账户', number: '**** **** **** 3241', balance: 32414000000.00, type: 'checking', currency: 'CNY', accountNumber: '6225880211112222', status: 'Active', openingDate: '2018-05-20', branch: '上海总部私人银行中心', depositType: '活期' },
+            { id: 'SGD15400', name: '新加坡元活期账户', number: '**** **** **** 1540', balance: 1540000000.00, type: 'checking', currency: 'SGD', accountNumber: 'SG9011223344556677', status: 'Active', openingDate: '2019-11-12', branch: '新加坡分行', depositType: '活期' },
+            { id: 'GBP56140', name: '英镑活期账户', number: '**** **** **** 5614', balance: 5614000000.00, type: 'checking', currency: 'GBP', accountNumber: 'GB29NWBK60161331926819', status: 'Active', openingDate: '2021-08-01', branch: '伦敦分行', depositType: '活期' },
+            { id: 'USD06470', name: '美元活期账户', number: '**** **** **** 0647', balance: 6470000.00, type: 'checking', currency: 'USD', accountNumber: '021000021-888999', status: 'Active', openingDate: '2022-03-15', branch: '纽约分行', depositType: '活期' },
+            { id: 'BLK00001', name: '全球顶级黑金卡', number: '**** **** **** 0001', balance: null, type: 'card', currency: 'MULTI', cardNumber: '3777 888888 99999', status: 'Active', openingDate: '2020-01-01', validThru: '12/29', limits: { single: 5000000, daily: 20000000 } }
+        ],
+        transactions: [], // 清空交易记录，模拟新系统
+        investments: [
+            { id: 'PF_CN', name: '中国市场投资组合', code: '中国', type: '地区基金', cost: 1000000000.00, currentValue: 1000000000.00, currency: 'CNY' },
+            { id: 'PF_UK', name: '英国市场投资组合', code: '英国', type: '地区基金', cost: 300000000.00, currentValue: 300000000.00, currency: 'GBP' },
+            { id: 'PF_US', name: '美国市场投资组合', code: '美国', type: '地区基金', cost: 6000000.00, currentValue: 6000000.00, currency: 'USD' },
+            { id: 'PF_SG', name: '新加坡市场投资组合', code: '新加坡', type: '地区基金', cost: 500000000.00, currentValue: 500000000.00, currency: 'SGD' }
+        ],
+        // 可购买的产品
+        availableProducts: {
+            investment: [
+                { id: 'PROD_INV_01', name: '中国成长先锋基金', currency: 'CNY' },
+                { id: 'PROD_INV_02', name: '全球科技领航基金', currency: 'USD' },
+                { id: 'PROD_INV_03', name: '欧洲稳健收益基金', currency: 'GBP' },
+            ],
+            deposit: [
+                { id: 'PROD_DEP_01', name: '1年期人民币定期存款', currency: 'CNY', term: 1, interestRate: 3.25 },
+                { id: 'PROD_DEP_02', name: '6个月美元定期存款', currency: 'USD', term: 0.5, interestRate: 4.50 },
+            ]
+        },
+        family: [
+            {
+                id: 'FAM001', name: '夫人', relationship: '配偶',
+                accounts: [
+                  { id: 'FAM_CNY_01', name: '人民币生活账户', balance: 500000.00, currency: 'CNY', allowance: 100000.00, allowanceType: '每月' },
+                  { id: 'FAM_USD_01', name: '美元旅行基金', balance: 50000.00, currency: 'USD', allowance: 10000.00, allowanceType: '每月' }
+                ]
+            },
+            {
+                id: 'FAM002', name: '长子', relationship: '子女',
+                accounts: [
+                  { id: 'FAM_CNY_02', name: '教育储蓄账户', balance: 1000000.00, currency: 'CNY', allowance: 50000.00, allowanceType: '每月' }
+                ]
+            }
+        ],
+        credit: {
+          totalLimit: 500000000,
+          usedAmount: 20000000,
+          interestRate: 2.5,
+          loans: [
+            { id: 'LOAN01', principal: 20000000, purpose: '商业投资', startDate: '2024-10-01', currency: 'CNY' }
+          ]
+        },
+        conciergeRequests: [
+          { id: 'REQ01', service: '预定私人飞机', details: '下周三，上海至伦敦', status: '处理中', submittedDate: '2025-09-28' },
+          { id: 'REQ02', service: '高端晚宴预定', details: '本周五，上海米其林三星餐厅，4人', status: '已完成', submittedDate: '2025-09-25' },
+        ],
+        exchangeRates: {
+            'USDCNY': 7.28, 'CNYUSD': 1/7.28,
+            'GBPCNY': 9.25, 'CNYGBP': 1/9.25,
+            'SGDCNY': 5.41, 'CNYSGD': 1/5.41,
+            'USDGBP': 0.78, 'GBPUSD': 1/0.78,
+            'USDSGD': 1.35, 'SGDUSD': 1/1.35,
+            'GBPSGD': 1.72, 'SGDGBP': 1/1.72
+        }
+    };
+
+    const app = {
+        transferData: {}, // 暂存转账数据
+        cardActionData: {}, // 暂存卡片管理操作数据
+        purchaseData: {}, // 暂存购买操作数据
+        forexData: {}, //暂存换汇数据
+        familyData: {}, //暂存家人账户操作数据
+        creditData: {}, //暂存信贷数据
+        init() { 
+            this.loadDataFromLocal();
+            this.updateUserInfo(); 
+            this.setupEventListeners(); 
+            this.router(); 
+        },
+        saveDataToLocal() {
+            try {
+                localStorage.setItem('familyOfficeData-MOAILUN', JSON.stringify(mockData));
+                console.log('Data saved to localStorage.');
+            } catch(e) {
+                console.error('Failed to save data to localStorage:', e);
+            }
+        },
+        loadDataFromLocal() {
+            try {
+                const savedData = localStorage.getItem('familyOfficeData-MOAILUN');
+                if (savedData) {
+                    mockData = JSON.parse(savedData);
+                    console.log('Data loaded from localStorage.');
+                } else {
+                    mockData = initialData; // Use initial data if nothing is saved
+                    this.saveDataToLocal(); // And save it for the first time
+                }
+            } catch(e) {
+                console.error('Failed to load data from localStorage:', e);
+                mockData = initialData; // Fallback to initial data on error
+            }
+        },
+        updateUserInfo() {
+            document.getElementById('userName').textContent = mockData.user.name;
+            document.getElementById('welcomeMessage').textContent = `尊敬的 ${mockData.user.name} 先生，欢迎回来！`;
+            const d = new Date(mockData.user.lastLogin);
+            document.getElementById('lastLoginTime').textContent = `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`;
+        },
+        setupEventListeners() {
+            window.addEventListener('hashchange', this.router.bind(this));
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const newHash = new URL(link.href).hash;
+                    if (window.location.hash !== newHash) window.location.hash = newHash;
+                    else this.router();
+                });
+            });
+            document.getElementById('logoutButton').addEventListener('click', () => this.showToast('您已安全退出', 'info'));
+            
+            // Modal close listener
+            document.getElementById('detail-modal').addEventListener('click', (e) => {
+                if(e.target.id === 'detail-modal') this.closeDetailModal();
+            });
+
+        },
+        router() {
+            const content = document.getElementById('content');
+            let hash = window.location.hash.substring(1) || 'dashboard';
+            content.innerHTML = '';
+            const template = document.getElementById(`${hash}-template`);
+            if (template) {
+                content.appendChild(template.content.cloneNode(true));
+                this.updatePageTitle(hash);
+                const pageRenderMethods = {
+                    dashboard: 'renderDashboard', 
+                    accounts: 'renderAccounts', 
+                    cards: 'renderCards', 
+                    transfer: 'renderTransferPage', 
+                    transactions: 'renderTransactions',
+                    investment: 'renderInvestment',
+                    settings: 'renderSettings',
+                    family: 'renderFamily',
+                    forex: 'renderForex',
+                    credit: 'renderCredit',
+                    concierge: 'renderConcierge'
+                };
+                if (this[pageRenderMethods[hash]]) this[pageRenderMethods[hash]]();
+            } else {
+                content.innerHTML = `<p>页面未找到。</p>`;
+                this.updatePageTitle('错误');
+            }
+            this.updateActiveNavLink(hash);
+        },
+        navigateTo(page) { window.location.hash = page; },
+        updatePageTitle(pageKey) {
+            const titles = { dashboard: '账户总览', accounts: '存款账户', cards: '我的卡片', transfer: '转账汇款', transactions: '交易明细', investment: '投资理财', settings: '设置', family: '家人账户', forex: '外汇兑换', credit: '信贷服务', concierge: '礼宾服务' };
+            document.getElementById('pageTitle').textContent = titles[pageKey] || '私人银行';
+        },
+        updateActiveNavLink(activePage) {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                const linkPage = link.href.split('#')[1] || 'dashboard';
+                if (linkPage === activePage) {
+                    link.classList.add('bg-gray-700', 'text-white');
+                } else {
+                    link.classList.remove('bg-gray-700', 'text-white');
+                }
+            });
+        },
+        renderDashboard() {
+            const rates = { CNY: 1, SGD: 5.4, GBP: 9.2, USD: 7.3 };
+            let totalAssets = 0;
+            const assetDistribution = {};
+            mockData.accounts.filter(a => a.type === 'checking').forEach(acc => {
+                const valueInCNY = acc.balance * (rates[acc.currency] || 1);
+                totalAssets += valueInCNY;
+                assetDistribution[acc.currency] = (assetDistribution[acc.currency] || 0) + valueInCNY;
+            });
+
+            document.getElementById('total-assets').textContent = this.formatCurrency(totalAssets, 'CNY');
+            const summaryGrid = document.getElementById('dashboard-summary-grid');
+            summaryGrid.innerHTML = '';
+            mockData.accounts.filter(a => a.type === 'checking').forEach(acc => {
+                summaryGrid.innerHTML += `<div><p class="text-gray-400">${acc.name}</p><p class="font-semibold text-lg text-white">${this.formatCurrency(acc.balance, acc.currency)}</p></div>`;
+            });
+            
+            const listEl = document.getElementById('recent-transactions-list');
+            if (mockData.transactions.length > 0) {
+                listEl.innerHTML = mockData.transactions.slice(0, 4).map(tx => {
+                    const isIncome = tx.amount > 0;
+                    const acc = mockData.accounts.find(a => a.id === tx.accountId);
+                    return `<div class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-700/50"><div class="flex items-center"><div class="p-2 rounded-full mr-4 ${isIncome ? 'bg-green-900/50' : 'bg-red-900/50'}">${isIncome ? '<svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"></path></svg>' : '<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path></svg>'}</div><div><p class="font-semibold text-white">${tx.description}</p><p class="text-sm text-gray-500">${new Date(tx.date).toLocaleDateString()}</p></div></div><p class="font-semibold text-lg ${isIncome ? 'text-green-400' : 'text-red-400'}">${isIncome ? '+' : ''}${this.formatCurrency(tx.amount, acc.currency, false)}</p></div>`;
+                }).join('');
+            } else {
+                listEl.innerHTML = `<p class="text-center text-gray-500 py-4">暂无交易记录</p>`;
+            }
+
+
+            this.renderAssetChart(assetDistribution, totalAssets, 'asset-chart-container');
+        },
+        renderAssetChart(distribution, total, containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const colors = { CNY: '#F59E0B', SGD: '#10B981', GBP: '#6366F1', USD: '#3B82F6', '地区基金': '#38BDF8' };
+            const radius = 60;
+            const circumference = 2 * Math.PI * radius;
+            let offset = 0;
+            const segments = Object.keys(distribution).map(key => {
+                const percentage = total > 0 ? (distribution[key] / total) * 100 : 0;
+                const strokeDasharray = `${(percentage / 100) * circumference} ${circumference}`;
+                const strokeDashoffset = -offset;
+                offset += (percentage / 100) * circumference;
+                return `<circle cx="70" cy="70" r="${radius}" fill="transparent" stroke="${colors[key] || '#9CA3AF'}" stroke-width="20" stroke-dasharray="${strokeDasharray}" stroke-dashoffset="${strokeDashoffset}" transform="rotate(-90 70 70)"></circle>`;
+            }).join('');
+            container.innerHTML = `<svg viewBox="0 0 140 140" class="w-36 h-36">${segments}</svg>`;
+        },
+        renderAccounts() {
+            const listEl = document.getElementById('accounts-list');
+            listEl.innerHTML = ''; // Clear previous content
+
+            const currentAccounts = mockData.accounts.filter(acc => acc.depositType === '活期');
+            const fixedAccounts = mockData.accounts.filter(acc => acc.depositType === '定期');
+
+            if (currentAccounts.length > 0) {
+                listEl.innerHTML += `<h2 class="text-xl font-semibold text-white md:col-span-2">活期存款 (Current Deposits)</h2>`;
+                currentAccounts.forEach(acc => {
+                    let cardHtml = `
+                    <div class="card-glow bg-gray-800 text-gray-300 p-6 rounded-xl shadow-2xl flex flex-col justify-between h-56" data-account-id="${acc.id}">
+                        <div>
+                            <p class="text-lg font-medium">${acc.name}</p>
+                            <p class="text-sm opacity-70">${acc.number}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm opacity-70 mb-1">当前余额</p>
+                            <p class="text-3xl font-bold text-amber-400">${this.formatCurrency(acc.balance, acc.currency)}</p>
+                        </div>
+                    </div>`;
+                    listEl.innerHTML += cardHtml;
+                });
+            }
+
+            if (fixedAccounts.length > 0 || true) { // Always show this section
+                listEl.innerHTML += `<h2 class="text-xl font-semibold text-white md:col-span-2 mt-8 flex justify-between items-center">
+                    <span>定期存款 (Fixed Deposits)</span>
+                    <button onclick="app.openPurchaseModal('deposit')" class="text-sm py-2 px-4 font-semibold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">+ 开立新定期存款</button>
+                </h2>`;
+                if (fixedAccounts.length > 0) {
+                    fixedAccounts.forEach(acc => {
+                        let cardHtml = `
+                        <div class="card-glow bg-gray-800 text-gray-300 p-6 rounded-xl shadow-2xl flex flex-col justify-between h-56" data-account-id="${acc.id}">
+                            <div>
+                                <p class="text-lg font-medium">${acc.name}</p>
+                                <p class="text-sm opacity-70">${acc.number}</p>
+                                 <div class="mt-2 text-xs">
+                                    <span class="bg-gray-700 px-2 py-1 rounded">利率: ${acc.interestRate}%</span>
+                                    <span class="bg-gray-700 px-2 py-1 rounded ml-2">到期日: ${acc.maturityDate}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-sm opacity-70 mb-1">存款金额</p>
+                                <p class="text-3xl font-bold text-amber-400">${this.formatCurrency(acc.balance, acc.currency)}</p>
+                            </div>
+                        </div>`;
+                        listEl.innerHTML += cardHtml;
+                    });
+                } else {
+                     listEl.innerHTML += `<div class="md:col-span-2 text-center text-gray-500 py-8">暂无定期存款产品。</div>`;
+                }
+            }
+
+            listEl.addEventListener('click', (e) => {
+                const accountDiv = e.target.closest('[data-account-id]');
+                if (accountDiv) this.showAccountDetails(accountDiv.dataset.accountId);
+            });
+        },
+        renderCards() {
+            const listEl = document.getElementById('cards-list');
+            listEl.innerHTML = mockData.accounts.filter(acc => acc.type === 'card').map(acc => {
+                const statusColors = {'Active': 'text-green-400', 'Frozen': 'text-blue-400', 'Lost': 'text-red-400'};
+                let cardDesign = { bg: 'bg-black', text: 'text-gray-200', highlight: 'text-amber-300', balance: `<p class="text-3xl font-bold text-amber-300">无限额度</p>` };
+                return `<div class="card-glow ${cardDesign.bg} ${cardDesign.text} p-6 rounded-xl shadow-2xl flex flex-col justify-between h-56" data-card-id="${acc.id}"><div><div class="flex justify-between items-start"><p class="text-lg font-medium">${acc.name}</p><span class="text-sm font-semibold ${statusColors[acc.status] || 'text-gray-400'}">${this.translateStatus(acc.status)}</span></div><p class="text-sm opacity-70 mt-1">${acc.cardNumber}</p></div><div><p class="text-sm opacity-70 mb-1">当前额度</p>${cardDesign.balance}</div></div>`;
+            }).join('');
+             listEl.addEventListener('click', (e) => {
+                const cardDiv = e.target.closest('[data-card-id]');
+                if (cardDiv) this.showCardDetails(cardDiv.dataset.cardId);
+            });
+        },
+        simulateMarketChanges() {
+            mockData.investments.forEach(item => {
+                const changePercent = (Math.random() - 0.48) * 0.05; // Simulate small daily fluctuation
+                item.currentValue *= (1 + changePercent);
+            });
+             mockData.exchangeRates.USDCNY *= (1 + (Math.random() - 0.5) * 0.001);
+             mockData.exchangeRates.GBPCNY *= (1 + (Math.random() - 0.5) * 0.001);
+             mockData.exchangeRates.SGDCNY *= (1 + (Math.random() - 0.5) * 0.001);
+        },
+        renderInvestment() {
+            this.simulateMarketChanges(); // Simulate market changes on each render
+            const rates = { CNY: 1, SGD: 5.4, GBP: 9.2, USD: 7.3 };
+            let totalValue = 0;
+            let totalCost = 0;
+            const distribution = {};
+
+            const holdings = mockData.investments.map(item => {
+                const value = item.currentValue * (rates[item.currency] || 1);
+                const cost = item.cost * (rates[item.currency] || 1);
+                const pnl = value - cost;
+                const pnlPercent = (cost === 0) ? 0 : (pnl / cost) * 100;
+
+                totalValue += value;
+                totalCost += cost;
+                distribution[item.type] = (distribution[item.type] || 0) + value;
+
+                return { ...item, value, cost, pnl, pnlPercent };
+            });
+
+            const totalPnl = totalValue - totalCost;
+            const totalReturn = (totalCost === 0) ? 0 : (totalPnl / totalCost) * 100;
+            
+            document.getElementById('investment-total-value').textContent = this.formatCurrency(totalValue, 'CNY');
+            const pnlEl = document.getElementById('investment-total-pnl');
+            pnlEl.textContent = `${totalPnl >= 0 ? '+' : ''}${this.formatCurrency(totalPnl, 'CNY')}`;
+            pnlEl.className = `text-2xl font-bold ${totalPnl >= 0 ? 'text-green-400' : 'text-red-400'}`;
+
+            const returnEl = document.getElementById('investment-total-return');
+            returnEl.textContent = `${totalReturn.toFixed(2)}%`;
+            returnEl.className = `text-2xl font-bold ${totalReturn >= 0 ? 'text-green-400' : 'text-red-400'}`;
+
+            const tableBody = document.getElementById('holdings-table-body');
+            tableBody.innerHTML = holdings.map(item => {
+                 const pnlClass = item.pnl >= 0 ? 'text-green-400' : 'text-red-400';
+                 return `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-white">${item.name}</div>
+                            <div class="text-xs text-gray-500">${item.code} - ${item.type}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <div class="text-sm text-white">${this.formatCurrency(item.value, 'CNY')}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                             <div class="text-sm text-white">${this.formatCurrency(item.cost, 'CNY')}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <div class="text-sm font-medium ${pnlClass}">${item.pnl >= 0 ? '+' : ''}${this.formatCurrency(item.pnl, 'CNY')}</div>
+                            <div class="text-xs ${pnlClass}">(${item.pnlPercent.toFixed(2)}%)</div>
+                        </td>
+                    </tr>
+                 `;
+            }).join('');
+            
+            this.renderAssetChart(distribution, totalValue, 'investment-chart-container');
+        },
+        showAccountDetails(accountId) {
+            const account = mockData.accounts.find(a => a.id === accountId);
+            if (!account) return;
+            const contentEl = document.getElementById('detail-modal-content');
+            
+            const statusColors = {'Active': 'text-green-400', 'Inactive': 'text-gray-400'};
+            
+            contentEl.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-white">${account.name} - 账户详情</h3>
+                    <button onclick="app.closeDetailModal()" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+                </div>
+                <div class="space-y-4 text-lg">
+                    <div class="flex justify-between border-b border-gray-700 py-3"><span class="text-gray-400">账户号码</span><span class="font-mono">${account.accountNumber}</span></div>
+                    <div class="flex justify-between border-b border-gray-700 py-3"><span class="text-gray-400">账户状态</span><span class="font-semibold ${statusColors[account.status] || 'text-gray-400'}">${this.translateStatus(account.status)}</span></div>
+                    <div class="flex justify-between border-b border-gray-700 py-3"><span class="text-gray-400">开户日期</span><span>${account.openingDate}</span></div>
+                    <div class="flex justify-between border-b border-gray-700 py-3"><span class="text-gray-400">开户分行</span><span>${account.branch}</span></div>
+                    ${account.depositType === '定期' ? `
+                    <div class="flex justify-between border-b border-gray-700 py-3"><span class="text-gray-400">利率</span><span>${account.interestRate}%</span></div>
+                    <div class="flex justify-between border-b border-gray-700 py-3"><span class="text-gray-400">到期日</span><span>${account.maturityDate}</span></div>
+                    ` : ''}
+                    <div class="flex justify-between items-baseline py-3"><span class="text-gray-400">当前余额</span><span class="text-3xl font-bold text-amber-400">${this.formatCurrency(account.balance, account.currency)}</span></div>
+                </div>
+            `;
+            document.getElementById('detail-modal').classList.remove('hidden');
+        },
+        showCardDetails(cardId) {
+            const card = mockData.accounts.find(c => c.id === cardId);
+            if (!card) return;
+            this.cardActionData = { cardId };
+            const contentEl = document.getElementById('detail-modal-content');
+            
+            const statusColors = {'Active': 'text-green-400', 'Frozen': 'text-blue-400', 'Lost': 'text-red-400'};
+            const isLost = card.status === 'Lost';
+
+            contentEl.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-white">${card.name} - 卡片管理</h3>
+                    <button onclick="app.closeDetailModal()" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Card Info -->
+                    <div class="space-y-4 text-lg">
+                        <div class="flex justify-between border-b border-gray-700 py-3"><span class="text-gray-400">卡号</span><span class="font-mono">${card.cardNumber}</span></div>
+                        <div class="flex justify-between border-b border-gray-700 py-3"><span class="text-gray-400">卡片状态</span><span class="font-semibold ${statusColors[card.status] || 'text-gray-400'}">${this.translateStatus(card.status)}</span></div>
+                        <div class="flex justify-between border-b border-gray-700 py-3"><span class="text-gray-400">开卡日期</span><span>${card.openingDate}</span></div>
+                        <div class="flex justify-between border-b border-gray-700 py-3"><span class="text-gray-400">有效期至</span><span>${card.validThru}</span></div>
+                    </div>
+                    <!-- Card Actions -->
+                    <div class="space-y-3" id="card-actions-panel">
+                        <h4 class="text-xl font-semibold text-white mb-3">管理操作</h4>
+                        <button onclick="app.initiateCardAction('freeze')" class="w-full text-left p-3 rounded-lg ${card.status === 'Frozen' ? 'bg-green-800/50 hover:bg-green-700/50 text-green-300' : 'bg-blue-800/50 hover:bg-blue-700/50 text-blue-300'} transition-colors" ${isLost ? 'disabled' : ''}>${card.status === 'Frozen' ? '解冻卡片' : '冻结卡片'}</button>
+                        <button onclick="app.initiateCardAction('report-lost')" class="w-full text-left p-3 bg-red-800/50 hover:bg-red-700/50 text-red-300 rounded-lg transition-colors" ${isLost ? 'disabled' : ''}>${isLost ? '已挂失' : '挂失卡片'}</button>
+                        <button onclick="app.initiateCardAction('set-limits')" class="w-full text-left p-3 bg-gray-700/50 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors" ${isLost ? 'disabled' : ''}>设置交易限额</button>
+                        <button onclick="app.initiateCardAction('replace')" class="w-full text-left p-3 bg-gray-700/50 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors" ${isLost ? 'disabled' : ''}>更换卡片</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detail-modal').classList.remove('hidden');
+        },
+        initiateCardAction(action) {
+            this.cardActionData.action = action;
+            const card = mockData.accounts.find(c => c.id === this.cardActionData.cardId);
+            const contentEl = document.getElementById('detail-modal-content');
+            let confirmationHtml = '';
+
+            switch(action) {
+                case 'freeze':
+                    const isFreezing = card.status !== 'Frozen';
+                    confirmationHtml = `
+                        <h3 class="text-xl font-semibold mb-4 text-white">${isFreezing ? '确认冻结卡片' : '确认解冻卡片'}</h3>
+                        <p class="text-gray-400 mb-6">${isFreezing ? '冻结后，此卡将暂时无法进行任何交易。您可以随时解冻以恢复使用。' : '解冻后，此卡将立即恢复所有交易功能。'}</p>
+                    `;
+                    break;
+                case 'report-lost':
+                    confirmationHtml = `
+                        <h3 class="text-xl font-semibold mb-4 text-white">确认挂失卡片</h3>
+                        <p class="text-red-400 mb-6">警告：此操作不可逆！卡片将被永久停用以确保您的资金安全。我们将自动为您安排补发新卡。</p>
+                    `;
+                    break;
+                case 'set-limits':
+                    this.cardActionData.payload = { ...card.limits }; // Store current limits
+                    confirmationHtml = `
+                        <h3 class="text-xl font-semibold mb-4 text-white">设置交易限额</h3>
+                        <p class="text-gray-400 mb-6">为保障您的资金安全，请设置合理的交易限额。</p>
+                        <div class="space-y-4">
+                            <div><label class="block text-sm font-medium text-gray-400">单笔交易限额 (CNY)</label><input type="number" id="single-limit" value="${card.limits.single}" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white"></div>
+                            <div><label class="block text-sm font-medium text-gray-400">每日交易限额 (CNY)</label><input type="number" id="daily-limit" value="${card.limits.daily}" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white"></div>
+                        </div>
+                    `;
+                    break;
+                case 'replace':
+                    confirmationHtml = `
+                        <h3 class="text-xl font-semibold mb-4 text-white">申请更换卡片</h3>
+                        <p class="text-gray-400 mb-6">新卡将寄送至您在本行登记的地址。旧卡将在新卡激活后失效。</p>
+                    `;
+                    break;
+            }
+            contentEl.innerHTML = `
+                ${confirmationHtml}
+                <div class="mt-8 flex justify-end space-x-4">
+                    <button onclick="app.showCardDetails('${card.id}')" class="py-2 px-5 text-gray-300 bg-gray-600 rounded-lg hover:bg-gray-500">取消</button>
+                    <button onclick="app.renderSecurityVerification('card')" class="py-2 px-5 font-semibold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">继续</button>
+                </div>
+            `;
+        },
+        renderSecurityVerification(flowType) {
+            const contentEl = document.getElementById('detail-modal-content');
+            let title = '';
+            if (flowType === 'card') {
+                const action = this.cardActionData.action;
+                if(action === 'set-limits') { // Capture input values before re-rendering
+                    this.cardActionData.payload.single = parseFloat(document.getElementById('single-limit').value);
+                    this.cardActionData.payload.daily = parseFloat(document.getElementById('daily-limit').value);
+                }
+                const titles = {'freeze': '冻结/解冻卡片', 'report-lost': '挂失卡片', 'set-limits': '设置限额', 'replace': '更换卡片'};
+                title = `安全验证 - ${titles[action]}`;
+            } else if (flowType === 'transfer') {
+                title = '安全验证 - 转账汇款';
+            } else if (flowType === 'purchase') {
+                 title = '安全验证 - 确认购买';
+            } else if (flowType === 'forex'){
+                title = '安全验证 - 确认兑换';
+            } else if (flowType === 'family'){
+                title = '安全验证 - 家人账户操作';
+            } else if (flowType === 'credit'){
+                title = '安全验证 - 贷款申请';
+            }
+
+
+            contentEl.innerHTML = `
+                <h3 class="text-xl font-semibold mb-4 text-white">${title}</h3>
+                <p class="text-gray-400 mb-6">请输入您的6位安全密码以授权此操作。</p>
+                <div><label for="security-code" class="block text-sm font-medium text-gray-400">安全密码</label><input type="password" id="security-code" placeholder="******" maxlength="6" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white text-center tracking-[.5em]"></div>
+                <div class="mt-8 flex justify-end space-x-4">
+                     <button onclick="app.closeDetailModal()" class="py-2 px-5 text-gray-300 bg-gray-600 rounded-lg hover:bg-gray-500">取消操作</button>
+                     <button onclick="app.processSecurityVerification('${flowType}')" class="py-2 px-5 font-semibold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">确认授权</button>
+                </div>
+            `;
+        },
+        processSecurityVerification(flowType) {
+            const code = document.getElementById('security-code').value;
+            if (code !== mockData.user.securityPassword) {
+                this.showToast('安全密码不正确', 'error');
+                return;
+            }
+            
+            if (flowType === 'card') { this.handleCardAction(); } 
+            else if (flowType === 'transfer') { this.processTransferStep2_final(); }
+            else if (flowType === 'purchase') { this.processPurchase_final(); }
+            else if (flowType === 'forex') { this.processForex_final(); }
+            else if (flowType === 'family') { this.processFamilyAction_final(); }
+            else if (flowType === 'credit') { this.processNewLoan_final(); }
+        },
+        handleCardAction() {
+            const {cardId, action, payload} = this.cardActionData;
+            const card = mockData.accounts.find(c => c.id === cardId);
+            if (!card) return;
+            
+            let message = '', finalHtml = '';
+            switch(action) {
+                case 'freeze': 
+                    const isFrozen = card.status === 'Frozen';
+                    card.status = isFrozen ? 'Active' : 'Frozen';
+                    message = isFrozen ? '卡片已成功解冻' : '卡片已成功冻结';
+                    finalHtml = `<p class="text-gray-400 mb-6">您的卡片状态已更新。${isFrozen ? '所有交易功能已恢复。' : '暂时无法进行交易。'}</p>`;
+                    break;
+                case 'report-lost': 
+                    card.status = 'Lost'; 
+                    message = '卡片已成功挂失'; 
+                    finalHtml = `<p class="text-gray-400 mb-6">您的卡片已被永久停用。新的卡片将会在5-7个工作日内寄送至您的预留地址。</p>`;
+                    break;
+                case 'set-limits':
+                    if(isNaN(payload.single) || isNaN(payload.daily) || payload.single < 0 || payload.daily < 0) {
+                        this.showToast('请输入有效的限额', 'error');
+                        this.showCardDetails(cardId);
+                        return;
+                    }
+                    card.limits = payload;
+                    message = '交易限额已更新';
+                    finalHtml = `<p class="text-gray-400 mb-6">您的单笔限额为 ${this.formatCurrency(payload.single, 'CNY')}，每日限额为 ${this.formatCurrency(payload.daily, 'CNY')}。</p>`;
+                    break;
+                case 'replace': 
+                    message = '更换卡片申请已提交'; 
+                    finalHtml = `<p class="text-gray-400 mb-6">我们已收到您的申请，新卡正在处理中，请耐心等待。</p>`;
+                    break;
+            }
+            this.showToast(message, 'success');
+            this.renderActionSuccess(message, finalHtml);
+            if (window.location.hash.substring(1) === 'cards') this.renderCards();
+            this.saveDataToLocal();
+        },
+        renderActionSuccess(title, htmlContent) {
+            const contentEl = document.getElementById('detail-modal-content');
+            contentEl.innerHTML = `
+                <div class="text-center p-4">
+                    <svg class="mx-auto mb-4 w-16 h-16 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <h3 class="text-xl font-semibold mb-2 text-white">${title}</h3>
+                    ${htmlContent}
+                    <div class="mt-8">
+                        <button onclick="app.closeDetailModalAndRefresh()" class="py-2 px-6 font-semibold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">完成</button>
+                    </div>
+                </div>
+            `;
+        },
+        closeDetailModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+            document.getElementById('detail-modal-content').innerHTML = ''; // Clear content
+            this.cardActionData = {}; // Reset card action state
+        },
+        renderSettings() {
+            document.getElementById('save-password-btn').addEventListener('click', () => {
+                const oldPass = document.getElementById('old-password').value;
+                const newPass = document.getElementById('new-password').value;
+                const confirmPass = document.getElementById('confirm-password').value;
+
+                if (oldPass !== mockData.user.securityPassword) {
+                    this.showToast('旧密码不正确', 'error');
+                    return;
+                }
+                if (!newPass || newPass.length !== 6 || isNaN(parseInt(newPass))) {
+                    this.showToast('新密码必须为6位数字', 'error');
+                    return;
+                }
+                if (newPass !== confirmPass) {
+                    this.showToast('两次输入的新密码不一致', 'error');
+                    return;
+                }
+                if (newPass === oldPass) {
+                    this.showToast('新密码不能与旧密码相同', 'error');
+                    return;
+                }
+
+                mockData.user.securityPassword = newPass;
+                this.showToast('交易密码修改成功');
+                document.getElementById('old-password').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+                this.saveDataToLocal();
+            });
+        },
+        getHighlightColor: (type) => type === 'card' ? 'text-amber-300' : 'text-amber-400',
+        renderTransferPage() { /* ... implementation unchanged ... */ },
+        renderTransactions() {
+            const filterSelect = document.getElementById('filter-account');
+            filterSelect.innerHTML = '<option value="all">所有存款账户</option>' + mockData.accounts.filter(a => a.type === 'checking').map(acc => `<option value="${acc.id}">${acc.name}</option>`).join('');
+            
+            this.displayTransactions(); // Initial display
+
+            document.getElementById('filter-btn').addEventListener('click', () => this.displayTransactions());
+            document.getElementById('download-statement-btn').addEventListener('click', () => this.downloadStatement());
+
+            // Add event listener to the table body for delegation
+            document.getElementById('transactions-table-body').addEventListener('click', (e) => {
+                const button = e.target.closest('button[data-tx-id]');
+                if (button) {
+                    this.showTransactionVoucher(button.dataset.txId);
+                }
+            });
+        },
+        displayTransactions() {
+            const accountId = document.getElementById('filter-account').value;
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+
+            const tableBody = document.getElementById('transactions-table-body');
+
+            let filteredTxs = mockData.transactions.filter(tx => {
+                if (accountId !== 'all' && tx.accountId !== accountId) return false;
+                if (startDate && new Date(tx.date) < new Date(startDate)) return false;
+                if (endDate) {
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59, 999); // Include the whole end day
+                    if (new Date(tx.date) > end) return false;
+                }
+                if (accountId === 'all' && mockData.accounts.find(a => a.id === tx.accountId)?.type === 'card') return false;
+                return true;
+            });
+            
+            tableBody.innerHTML = filteredTxs.length ? filteredTxs.map(tx => {
+                const isIncome = tx.amount > 0;
+                const acc = mockData.accounts.find(a => a.id === tx.accountId);
+                return `<tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-white">${new Date(tx.date).toLocaleDateString()}</div>
+                        <div class="text-xs text-gray-500">${new Date(tx.date).toLocaleTimeString()}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-white">${tx.description}</div>
+                        <div class="text-xs text-gray-500">${acc.name}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-lg font-medium">
+                        <span class="${isIncome ? 'text-green-400' : 'text-red-400'}">${isIncome ? '+' : ''}${this.formatCurrency(tx.amount, acc.currency, false)}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                        <button data-tx-id="${tx.id}" class="text-amber-400 hover:text-amber-300">查看凭证</button>
+                    </td>
+                </tr>`;
+            }).join('') : `<tr><td colspan="4" class="text-center py-10 text-gray-500">此条件下暂无交易记录。</td></tr>`;
+        },
+        showTransactionVoucher(txId) {
+            const tx = mockData.transactions.find(t => t.id === txId);
+            if (!tx) return;
+            const account = mockData.accounts.find(a => a.id === tx.accountId);
+            const contentEl = document.getElementById('detail-modal-content');
+            
+            contentEl.innerHTML = `
+                <div class="bg-gray-700 p-6 rounded-lg text-white">
+                    <div class="flex justify-between items-start border-b border-gray-600 pb-4 mb-4">
+                        <div>
+                            <h3 class="text-2xl font-bold text-amber-400 font-serif-sc">电子回单 (Transaction Voucher)</h3>
+                            <p class="text-gray-400">私人银行</p>
+                        </div>
+                        <button onclick="app.closeDetailModal()" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+                    </div>
+                    <div class="space-y-3 text-base">
+                        <div class="flex justify-between"><span class="text-gray-400">交易流水号:</span><span class="font-mono">${tx.id}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">交易时间:</span><span>${new Date(tx.date).toLocaleString()}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">交易类型:</span><span>${tx.type}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">交易状态:</span><span class="font-semibold text-green-400">${tx.status}</span></div>
+                        <hr class="border-gray-600">
+                        <div class="flex justify-between"><span class="text-gray-400">付款方名称:</span><span>${tx.amount < 0 ? 'MOAILUN' : tx.payerAccount}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">付款方账户:</span><span>${account.accountNumber}</span></div>
+                         <hr class="border-gray-600">
+                        <div class="flex justify-between"><span class="text-gray-400">收款方名称:</span><span>${tx.payeeName}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-400">收款方账户:</span><span>${tx.payeeAccount}</span></div>
+                        <hr class="border-gray-600">
+                        <div class="flex justify-between items-baseline"><span class="text-gray-400">交易金额:</span><span class="text-2xl font-bold text-amber-400">${this.formatCurrency(Math.abs(tx.amount), account.currency)}</span></div>
+                    </div>
+                    <div class="mt-8 text-center">
+                        <button onclick="app.downloadVoucher('${tx.id}')" class="py-2 px-6 font-semibold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">下载凭证</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detail-modal').classList.remove('hidden');
+        },
+        downloadVoucher(txId) {
+            const tx = mockData.transactions.find(t => t.id === txId);
+            if (!tx) return;
+            const account = mockData.accounts.find(a => a.id === tx.accountId);
+            const content = `
+私人银行 电子回单
+---------------------------------
+交易流水号: ${tx.id}
+交易时间: ${new Date(tx.date).toLocaleString()}
+交易类型: ${tx.type}
+交易状态: ${tx.status}
+---------------------------------
+付款方名称: ${tx.amount < 0 ? 'MOAILUN' : tx.payerAccount}
+付款方账户: ${account.accountNumber}
+---------------------------------
+收款方名称: ${tx.payeeName}
+收款方账户: ${tx.payeeAccount}
+---------------------------------
+交易金额: ${this.formatCurrency(Math.abs(tx.amount), account.currency)}
+            `;
+            const blob = new Blob([content.trim()], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Voucher-${tx.id}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            this.showToast('凭证已开始下载');
+        },
+        downloadStatement() {
+            const accountId = document.getElementById('filter-account').value;
+            const startDate = document.getElementById('start-date').value || 'all-time';
+            const endDate = document.getElementById('end-date').value || 'today';
+            
+            const account = mockData.accounts.find(a => a.id === accountId);
+            const accountName = account ? account.name : '所有存款账户';
+
+            let filteredTxs = mockData.transactions.filter(tx => {
+                if (accountId !== 'all' && tx.accountId !== accountId) return false;
+                if (document.getElementById('start-date').value && new Date(tx.date) < new Date(document.getElementById('start-date').value)) return false;
+                if (document.getElementById('end-date').value) {
+                    const end = new Date(document.getElementById('end-date').value);
+                    end.setHours(23, 59, 59, 999);
+                    if (new Date(tx.date) > end) return false;
+                }
+                if (accountId === 'all' && mockData.accounts.find(a => a.id === tx.accountId)?.type === 'card') return false;
+                return true;
+            });
+
+            if (filteredTxs.length === 0) {
+                this.showToast('没有可下载的交易记录', 'info');
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "交易日期,描述,类型,收入,支出,币种\r\n";
+
+            filteredTxs.forEach(tx => {
+                const acc = mockData.accounts.find(a => a.id === tx.accountId);
+                const date = new Date(tx.date).toLocaleString('zh-CN');
+                const income = tx.amount > 0 ? tx.amount.toFixed(2) : '0.00';
+                const expense = tx.amount < 0 ? Math.abs(tx.amount).toFixed(2) : '0.00';
+                const row = [`"${date}"`, `"${tx.description}"`, tx.type, income, expense, acc.currency].join(',');
+                csvContent += row + "\r\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const a = document.createElement('a');
+            a.href = encodedUri;
+            a.download = `Statement-${accountName}-${startDate}_to_${endDate}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            this.showToast('对账单已开始下载');
+        },
+        formatCurrency(amount, currencyCode = 'CNY', withSymbol = true) {
+            if (amount === null || typeof amount === 'undefined') return 'N/A';
+             try {
+                const formatter = new Intl.NumberFormat('zh-CN', { style: 'currency', currency: currencyCode, minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return withSymbol ? formatter.format(amount) : amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            } catch (e) { return amount.toFixed(2) + ' ' + currencyCode; }
+        },
+        translateStatus(status) {
+            const map = { 'Active': '活跃', 'Frozen': '已冻结', 'Lost': '已挂失', 'Inactive': '未激活' };
+            return map[status] || status;
+        },
+        showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.className = 'fixed top-5 right-5 text-white py-3 px-6 rounded-lg shadow-lg transform transition-transform duration-500 ease-in-out z-50';
+            if (type === 'success') toast.classList.add('bg-green-500');
+            else if (type === 'error') toast.classList.add('bg-red-500');
+            else toast.classList.add('bg-blue-500');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.replace('translate-x-[150%]', 'translate-x-0');
+            setTimeout(() => toast.classList.replace('translate-x-0', 'translate-x-[150%]'), 3000);
+        },
+        openTransferModal() {
+            this.transferData = {};
+            this.renderTransferStep1();
+        },
+        renderTransferStep1() {
+            const modal = document.getElementById('detail-modal');
+            const modalContent = document.getElementById('detail-modal-content');
+            const fromOptions = mockData.accounts.filter(a => a.type === 'checking' && a.depositType === '活期').map(acc => `<option value="${acc.id}">${acc.name} (${this.formatCurrency(acc.balance, acc.currency)})</option>`).join('');
+            modalContent.innerHTML = `
+                <div class="p-2"><h3 class="text-xl font-semibold mb-6 text-white">转账汇款 - 填写信息</h3><div class="space-y-4">
+                <div><label for="from-account" class="block text-sm font-medium text-gray-400">付款账户</label><select id="from-account" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white">${fromOptions}</select></div>
+                <div><label for="to-name" class="block text-sm font-medium text-gray-400">收款人姓名</label><input type="text" id="to-name" placeholder="请输入收款人姓名" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white"></div>
+                <div><label for="to-account-number" class="block text-sm font-medium text-gray-400">收款人卡号/账号</label><input type="text" id="to-account-number" placeholder="请输入收款人卡号/账号" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white"></div>
+                <div><label for="amount" class="block text-sm font-medium text-gray-400">转账金额</label><input type="number" id="amount" placeholder="0.00" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white"></div>
+                <div><label for="notes" class="block text-sm font-medium text-gray-400">备注</label><input type="text" id="notes" placeholder="选填" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white"></div>
+                </div><div class="mt-8 flex justify-between"><button onclick="app.closeDetailModal()" class="py-2 px-4 text-gray-300">取消</button><button id="next-btn" class="py-2 px-6 font-semibold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">下一步</button></div></div>`;
+            document.getElementById('next-btn').addEventListener('click', () => this.processTransferStep1());
+            modal.classList.remove('hidden');
+        },
+        processTransferStep1() {
+            const fromAccountId = document.getElementById('from-account').value;
+            const toName = document.getElementById('to-name').value.trim();
+            const toAccountNumber = document.getElementById('to-account-number').value.trim();
+            const amount = parseFloat(document.getElementById('amount').value);
+            const notes = document.getElementById('notes').value;
+            const fromAccount = mockData.accounts.find(a => a.id === fromAccountId);
+
+            if (!toName) { this.showToast('请输入收款人姓名', 'error'); return; }
+            if (!toAccountNumber) { this.showToast('请输入收款人卡号/账号', 'error'); return; }
+            if (isNaN(amount) || amount <= 0) { this.showToast('请输入有效的转账金额', 'error'); return; }
+            if (!fromAccount || fromAccount.balance < amount) { this.showToast('付款账户余额不足', 'error'); return; }
+
+            this.transferData = { fromAccountId, toName, toAccountNumber, amount, notes, fromAccount };
+            this.renderTransferStep2();
+        },
+        renderTransferStep2() {
+            const { fromAccount, toName, toAccountNumber, amount, notes } = this.transferData;
+            const modalContent = document.getElementById('detail-modal-content');
+            modalContent.innerHTML = `
+                <div class="p-2"><h3 class="text-xl font-semibold mb-6 text-white">转账汇款 - 确认详情</h3><div class="space-y-3 text-gray-300">
+                <div class="flex justify-between"><span class="text-gray-400">付款账户</span><span>${fromAccount.name}</span></div>
+                <div class="flex justify-between"><span class="text-gray-400">收款人姓名</span><span>${toName}</span></div>
+                <div class="flex justify-between"><span class="text-gray-400">收款人账号</span><span>${toAccountNumber}</span></div>
+                <div class="flex justify-between items-baseline"><span class="text-gray-400">转账金额</span><span class="text-2xl font-bold text-amber-400">${this.formatCurrency(amount, fromAccount.currency)}</span></div>
+                ${notes ? `<div class="flex justify-between"><span class="text-gray-400">备注</span><span>${notes}</span></div>` : ''}
+                <hr class="border-gray-600 my-4">
+                </div><div class="mt-8 flex justify-between"><button onclick="app.renderTransferStep1()" class="py-2 px-4 text-gray-300">上一步</button><button onclick="app.processTransferStep2()" class="py-2 px-6 font-semibold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">确认转账</button></div></div>`;
+        },
+        processTransferStep2() {
+            this.renderSecurityVerification('transfer');
+        },
+        processTransferStep2_final() { // The actual logic after security check
+            const { fromAccount, amount, toName, notes, toAccountNumber } = this.transferData;
+            fromAccount.balance -= amount;
+            const txId = 'T' + Date.now();
+            mockData.transactions.unshift({
+                id: txId, accountId: fromAccount.id, date: new Date().toISOString(),
+                description: `转账给 ${toName}` + (notes ? ` - ${notes}` : ''),
+                amount: -amount, type: '转账',
+                payerAccount: fromAccount.accountNumber,
+                payeeName: toName,
+                payeeAccount: toAccountNumber,
+                status: '已完成'
+            });
+            this.saveDataToLocal();
+            this.renderTransferStep3(txId);
+        },
+        renderTransferStep3(txId) {
+            const modalContent = document.getElementById('detail-modal-content');
+             modalContent.innerHTML = `
+                <div class="p-8 text-center"><svg class="mx-auto mb-4 w-16 h-16 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <h3 class="text-xl font-semibold mb-2 text-white">转账成功</h3>
+                <p class="text-gray-400">交易参考号: ${txId}</p>
+                <div class="mt-8"><button onclick="app.closeDetailModalAndRefresh()" class="py-2 px-6 font-semibold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">完成</button></div></div>`;
+        },
+        openPurchaseModal(type) {
+            this.purchaseData = { type };
+            const modal = document.getElementById('detail-modal');
+            const modalContent = document.getElementById('detail-modal-content');
+            
+            const products = mockData.availableProducts[type];
+            const title = type === 'investment' ? '投资申购' : '开立定期存款';
+            
+            const productOptions = products.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            
+            const fundingAccountOptions = mockData.accounts
+                .filter(a => a.depositType === '活期')
+                .map(acc => `<option value="${acc.id}">${acc.name} (${this.formatCurrency(acc.balance, acc.currency)})</option>`).join('');
+
+            modalContent.innerHTML = `
+                <div class="p-2"><h3 class="text-xl font-semibold mb-6 text-white">${title}</h3><div class="space-y-4">
+                <div><label class="block text-sm font-medium text-gray-400">选择产品</label><select id="product-select" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white">${productOptions}</select></div>
+                <div><label class="block text-sm font-medium text-gray-400">付款账户</label><select id="funding-account-select" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white">${fundingAccountOptions}</select></div>
+                <div><label class="block text-sm font-medium text-gray-400">金额</label><input type="number" id="purchase-amount" placeholder="0.00" class="mt-1 w-full bg-gray-700 border-gray-600 rounded-md p-2 text-white"></div>
+                </div><div class="mt-8 flex justify-between"><button onclick="app.closeDetailModal()" class="py-2 px-4 text-gray-300">取消</button><button onclick="app.processPurchase()" class="py-2 px-6 font-semibold bg-amber-400 text-gray-900 rounded-lg hover:bg-amber-500">下一步</button></div></div>`;
+
+            modal.classList.remove('hidden');
+        },
+        processPurchase() {
+            const productId = document.getElementById('product-select').value;
+            const fundingAccountId = document.getElementById('funding-account-select').value;
+            const amount = parseFloat(document.getElementById('purchase-amount').value);
+            
+            const fundingAccount = mockData.accounts.find(a => a.id === fundingAccountId);
+            const product = mockData.availableProducts[this.purchaseData.type].find(p => p.id === productId);
+
+            if (isNaN(amount) || amount <= 0) { this.showToast('请输入有效的金额', 'error'); return; }
+            if (product.currency !== fundingAccount.currency) { this.showToast('产品币种与付款账户币种不符', 'error'); return; }
+            if (fundingAccount.balance < amount) { this.showToast('付款账户余额不足', 'error'); return; }
+
+            this.purchaseData = { ...this.purchaseData, product, fundingAccount, amount };
+            this.renderSecurityVerification('purchase');
+        },
+        processPurchase_final() {
+            const { type, product, fundingAccount, amount } = this.purchaseData;
+            
+            // Deduct from funding account
+            fundingAccount.balance -= amount;
+            
+            let description = '';
+
+            if (type === 'investment') {
+                description = `投资申购 - ${product.name}`;
+                const existingInvestment = mockData.investments.find(inv => inv.code === product.id); // Simple check if we already have this fund
+                if(existingInvestment){
+                    existingInvestment.cost += amount;
+                    existingInvestment.currentValue += amount;
+                } else {
+                     mockData.investments.push({
+                        id: 'PF_' + product.id,
+                        name: product.name,
+                        code: product.id,
+                        type: '基金',
+                        cost: amount,
+                        currentValue: amount,
+                        currency: product.currency
+                    });
+                }
+            } else if (type === 'deposit') {
+                description = `开立定期存款 - ${product.name}`;
+                const today = new Date();
+                const maturityDate = new Date(today.setMonth(today.getMonth() + product.term * 12));
+                mockData.accounts.push({
+                    id: `FIXED_${product.currency}_${Date.now()}`,
+                    name: product.name,
+                    number: `**** **** **** ${Math.floor(1000 + Math.random() * 9000)}`,
+                    balance: amount,
+                    type: 'checking',
+                    currency: product.currency,
+                    accountNumber: `62259999${Math.floor(10000000 + Math.random() * 90000000)}`,
+                    status: 'Active',
+                    openingDate: new Date().toISOString().split('T')[0],
+                    branch: '网上银行中心',
+                    depositType: '定期',
+                    interestRate: `${product.interestRate.toFixed(2)}`,
+                    maturityDate: maturityDate.toISOString().split('T')[0]
+                });
+            }
+
+             // Create transaction record
+            mockData.transactions.unshift({
+                id: 'T' + Date.now(),
+                accountId: fundingAccount.id,
+                date: new Date().toISOString(),
+                description: description,
+                amount: -amount,
+                type: type === 'investment' ? '投资' : '存款',
+                payerAccount: fundingAccount.accountNumber,
+                payeeName: "金融产品中心",
+                payeeAccount: "产品中心",
+                status: '已完成'
+            });
+
+            const successMessage = `${type === 'investment' ? '投资申购' : '定期存款开立'}成功`;
+            const finalHtml = `<p class="text-gray-400 mb-6">您已成功${type === 'investment' ? '申购' : '开立'} ${product.name}，金额为 ${this.formatCurrency(amount, product.currency)}。</p>`;
+
+            this.showToast(successMessage);
+            this.renderActionSuccess(successMessage, finalHtml);
+            this.saveDataToLocal();
+        },
+        closeDetailModalAndRefresh() {
+            this.closeDetailModal();
+            this.router();
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
+
